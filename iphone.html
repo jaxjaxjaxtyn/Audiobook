@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Great Gatsby Read-Along</title>
+  <style>
+    :root {
+      --bg: #0d0d12;
+      --bg-soft: #171822;
+      --card: rgba(29, 31, 42, 0.86);
+      --card-strong: rgba(37, 39, 54, 0.98);
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #f6f7fb;
+      --muted: #a8adc1;
+      --accent: #ff8a3d;
+      --accent-2: #ffd25f;
+      --accent-soft: rgba(255, 138, 61, 0.18);
+      --active: rgba(255, 210, 95, 0.28);
+      --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top center, rgba(255, 138, 61, 0.24), transparent 24%),
+        radial-gradient(circle at 80% 10%, rgba(255, 210, 95, 0.14), transparent 20%),
+        linear-gradient(180deg, #11121a 0%, var(--bg) 40%, #09090d 100%);
+      min-height: 100vh;
+    }
+    button, input, audio {
+      font: inherit;
+    }
+    .app {
+      min-height: 100vh;
+      padding: 16px 12px 28px;
+      display: grid;
+      gap: 14px;
+    }
+    .hero, .panel, .player-bar {
+      background: var(--card);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    .hero {
+      border-radius: 28px;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+    .hero-top {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+    }
+    .cover {
+      aspect-ratio: 1;
+      border-radius: 22px;
+      background:
+        linear-gradient(160deg, rgba(255, 210, 95, 0.88), rgba(255, 138, 61, 0.9)),
+        linear-gradient(180deg, #f3d18d, #b9632c);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 18px 40px rgba(255, 138, 61, 0.22);
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.34);
+    }
+    .cover::after {
+      content: "AUDIOBOOK";
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      font-weight: 700;
+      color: rgba(15, 15, 20, 0.76);
+    }
+    .eyebrow {
+      margin-bottom: 6px;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 7vw, 2.1rem);
+      line-height: 1.06;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .pill {
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    audio {
+      width: 100%;
+      height: 44px;
+      filter: saturate(1.1);
+    }
+    .player-bar {
+      border-radius: 24px;
+      padding: 14px 14px 12px;
+      display: grid;
+      gap: 12px;
+    }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .tab {
+      border: 0;
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, rgba(255,138,61,0.28), rgba(255,210,95,0.2));
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+    .panel {
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 16px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-title {
+      font-size: 0.97rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .panel-copy {
+      margin-top: 4px;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+    .panel-body {
+      padding: 16px;
+    }
+    .view {
+      display: none;
+    }
+    .view.active {
+      display: block;
+    }
+    .caption-stage {
+      padding: 18px;
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+        linear-gradient(120deg, rgba(255,138,61,0.1), rgba(255,210,95,0.05));
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .cue {
+      font-size: clamp(1.22rem, 5vw, 1.8rem);
+      line-height: 1.45;
+      letter-spacing: -0.02em;
+      font-weight: 650;
+      min-height: 7.4em;
+    }
+    .up-next {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .mini-label {
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .next-line {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.045);
+      color: #d7daea;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .meta {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .excerpt {
+      margin-top: 14px;
+      padding: 15px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+      line-height: 1.7;
+      color: #e9ebf4;
+      font-size: 0.97rem;
+    }
+    .book-body {
+      max-height: min(62vh, 720px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 6px;
+    }
+    .chapter-block + .chapter-block {
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .chapter-title {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: #e9d6c7;
+    }
+    .para {
+      margin: 0 0 0.95rem;
+      padding: 0.45rem 0.55rem;
+      border-radius: 12px;
+      font-family: "Iowan Old Style", "Palatino", "Times New Roman", serif;
+      font-size: 1.02rem;
+      line-height: 1.82;
+      color: #eeedf5;
+      scroll-margin-top: 24px;
+      transition: background 0.18s ease, transform 0.18s ease, color 0.18s ease;
+    }
+    .para.active {
+      background: var(--active);
+      color: #fffaf0;
+      transform: translateX(4px);
+    }
+    .sample-card {
+      padding: 16px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .sample-card h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+    .sample-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.92rem;
+    }
+    mark {
+      background: var(--active);
+      color: #fff7d5;
+      padding: 0.05em 0.14em;
+      border-radius: 0.28em;
+    }
+    @media (min-width: 920px) {
+      .app {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .hero {
+        grid-template-columns: minmax(0, 1fr) 360px;
+        align-items: center;
+      }
+      .hero-top {
+        grid-template-columns: 124px minmax(0, 1fr);
+      }
+      .stack {
+        grid-template-columns: minmax(340px, 0.94fr) minmax(0, 1.25fr) minmax(300px, 0.8fr);
+        align-items: start;
+      }
+      .panel {
+        min-height: 520px;
+      }
+      .book-body {
+        max-height: 72vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="hero-top">
+        <div class="cover" aria-hidden="true"></div>
+        <div>
+          <div class="eyebrow">iPhone Read-Along</div>
+          <h1 id="title"></h1>
+          <div class="status">
+            <span class="pill" id="matchStat"></span>
+            <span class="pill" id="chapterStat"></span>
+          </div>
+        </div>
+      </div>
+      <div class="player-bar">
+        <audio id="audio" controls preload="metadata"></audio>
+        <div class="time-row">
+          <span>Apple Podcasts-style subtitle sample</span>
+          <span id="timeStat"></span>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="Views">
+      <button class="tab active" data-view-target="captions">Captions</button>
+      <button class="tab" data-view-target="book">Book</button>
+      <button class="tab" data-view-target="sample">Sample</button>
+    </nav>
+
+    <section class="stack">
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Live Subtitle</div>
+          <div class="panel-copy">Large, phone-friendly captions with book-position sync.</div>
+        </div>
+        <div class="panel-body">
+          <section class="view active" data-view="captions">
+            <div class="caption-stage">
+              <div class="cue" id="cueText">Press play to begin.</div>
+            </div>
+            <div class="meta" id="cueMeta"></div>
+            <div class="excerpt" id="excerptBox">The matching book excerpt will appear here.</div>
+            <div class="up-next">
+              <div class="mini-label">Up Next</div>
+              <div class="next-line" id="nextCueOne">The next subtitle line will appear here.</div>
+              <div class="next-line" id="nextCueTwo">The line after that will appear here.</div>
+            </div>
+          </section>
+
+          <section class="view" data-view="sample">
+            <div class="sample-card">
+              <h3>Apple Podcasts-style sample</h3>
+              <p>
+                This version is tuned for iPhone: big subtitle text, simple playback, and a clear
+                handoff between the current spoken line and the matching place in the book.
+              </p>
+            </div>
+            <div class="excerpt" id="sampleExcerpt">
+              Use the Captions tab while audio is playing to see the live subtitle highlight sample.
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Book Sync</div>
+          <div class="panel-copy">The active paragraph follows the narration when a safe match is available.</div>
+        </div>
+        <div class="panel-body">
+          <section class="view" data-view="book">
+            <div class="book-body" id="bookBody"></div>
+          </section>
+          <section class="view active" data-view="desktop-book">
+            <div class="book-body" id="bookBodyDesktop"></div>
+          </section>
+        </div>
+      </article>
+
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Playback Notes</div>
+          <div class="panel-copy">Useful context for listening on iPhone.</div>
+        </div>
+        <div class="panel-body">
+          <div class="sample-card">
+            <h3>What this version does</h3>
+            <p id="syncSummary"></p>
+          </div>
+          <div class="excerpt">
+            The intro and outro voiceover are kept as subtitles, but they are not forced onto the
+            book text. That way the highlight stays honest instead of jumping to the wrong paragraph.
+          </div>
+        </div>
+      </aside>
+    </section>
+  </div>
+  <script src="data.js"></script>
+  <script>
+    const data = window.READALONG_DATA;
+    const audio = document.getElementById('audio');
+    const titleEl = document.getElementById('title');
+    const matchStatEl = document.getElementById('matchStat');
+    const chapterStatEl = document.getElementById('chapterStat');
+    const timeStatEl = document.getElementById('timeStat');
+    const bookBody = document.getElementById('bookBody');
+    const bookBodyDesktop = document.getElementById('bookBodyDesktop');
+    const cueText = document.getElementById('cueText');
+    const cueMeta = document.getElementById('cueMeta');
+    const excerptBox = document.getElementById('excerptBox');
+    const nextCueOne = document.getElementById('nextCueOne');
+    const nextCueTwo = document.getElementById('nextCueTwo');
+    const syncSummary = document.getElementById('syncSummary');
+    const tabs = [...document.querySelectorAll('.tab')];
+    const views = [...document.querySelectorAll('[data-view]')];
+
+    audio.src = data.audioFile;
+    titleEl.textContent = data.title;
+    matchStatEl.textContent = `${data.stats.matchedPercent}% matched`;
+    chapterStatEl.textContent = `${data.chapters.length} chapters`;
+    syncSummary.textContent = `${data.stats.matchedCueCount} of ${data.stats.cueCount} subtitle cues are tied to book positions. This page is arranged as a phone-first listening view with live captions.`;
+
+    function renderBook(target) {
+      target.innerHTML = '';
+      for (const chapter of data.chapters) {
+        const block = document.createElement('section');
+        block.className = 'chapter-block';
+        const h = document.createElement('h2');
+        h.className = 'chapter-title';
+        h.textContent = chapter.title;
+        block.appendChild(h);
+        for (const para of chapter.paragraphs) {
+          const p = document.createElement('p');
+          p.className = 'para';
+          p.id = `${target.id}-${para.id}`;
+          p.dataset.paraMirror = para.id;
+          p.textContent = para.text;
+          block.appendChild(p);
+        }
+        target.appendChild(block);
+      }
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatTime(seconds) {
+      const total = Math.floor(seconds);
+      const hours = Math.floor(total / 3600);
+      const mins = Math.floor((total % 3600) / 60);
+      const secs = total % 60;
+      return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function findCue(time) {
+      for (let i = 0; i < data.cues.length; i += 1) {
+        const cue = data.cues[i];
+        if (time >= cue.start && time <= cue.end) return cue;
+      }
+      return null;
+    }
+
+    function findCueIndex(time) {
+      for (let i = 0; i < data.cues.length; i += 1) {
+        const cue = data.cues[i];
+        if (time >= cue.start && time <= cue.end) return i;
+      }
+      return -1;
+    }
+
+    function setView(name) {
+      tabs.forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.viewTarget === name);
+      });
+      views.forEach((view) => {
+        const viewName = view.dataset.view;
+        if (window.innerWidth >= 920 && viewName === 'desktop-book') {
+          view.classList.add('active');
+          return;
+        }
+        if (window.innerWidth >= 920 && viewName === 'book') {
+          view.classList.remove('active');
+          return;
+        }
+        if (window.innerWidth < 920 && viewName === 'desktop-book') {
+          view.classList.remove('active');
+          return;
+        }
+        view.classList.toggle('active', viewName === name);
+      });
+    }
+
+    let lastParaId = null;
+    let lastCueIndex = null;
+
+    function updateUI() {
+      const cue = findCue(audio.currentTime);
+      const cueIndex = findCueIndex(audio.currentTime);
+      timeStatEl.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;
+      if (!cue) {
+        return;
+      }
+      if (cue.index === lastCueIndex) {
+        return;
+      }
+      lastCueIndex = cue.index;
+      cueText.textContent = cue.text || '...';
+      nextCueOne.textContent = data.cues[cueIndex + 1]?.text || 'No next subtitle line.';
+      nextCueTwo.textContent = data.cues[cueIndex + 2]?.text || 'No additional subtitle line.';
+
+      if (!cue.matched) {
+        cueMeta.textContent = 'This subtitle cue was not matched to a precise book location.';
+        excerptBox.textContent = 'The narration is currently outside the matched text range, such as the spoken intro.';
+        if (lastParaId) {
+          document.querySelectorAll(`[data-para-mirror="${lastParaId}"]`).forEach((node) => node.classList.remove('active'));
+          lastParaId = null;
+        }
+        return;
+      }
+
+      cueMeta.textContent = `${cue.chapterTitle || 'Unknown chapter'} · ${formatTime(cue.start)} to ${formatTime(cue.end)}`;
+
+      const contextStart = Math.max(0, cue.bookStart - 140);
+      const contextEnd = Math.min(data.bookText.length, cue.bookEnd + 140);
+      const before = escapeHtml(data.bookText.slice(contextStart, cue.bookStart));
+      const current = escapeHtml(data.bookText.slice(cue.bookStart, cue.bookEnd));
+      const after = escapeHtml(data.bookText.slice(cue.bookEnd, contextEnd));
+      excerptBox.innerHTML = `${before}<mark>${current}</mark>${after}`;
+
+      if (lastParaId && lastParaId !== cue.paragraphId) {
+        document.querySelectorAll(`[data-para-mirror="${lastParaId}"]`).forEach((node) => node.classList.remove('active'));
+      }
+
+      if (cue.paragraphId) {
+        const nodes = [...document.querySelectorAll(`[data-para-mirror="${cue.paragraphId}"]`)];
+        nodes.forEach((node) => {
+          node.classList.add('active');
+        });
+        const mobileNode = nodes[0];
+        const desktopNode = nodes[1] || nodes[0];
+        if (mobileNode && window.innerWidth < 920) {
+          mobileNode.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+        if (desktopNode && window.innerWidth >= 920) {
+          desktopNode.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+        lastParaId = cue.paragraphId;
+      }
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => setView(tab.dataset.viewTarget));
+    });
+
+    renderBook(bookBody);
+    renderBook(bookBodyDesktop);
+    setView('captions');
+    audio.addEventListener('timeupdate', updateUI);
+    audio.addEventListener('loadedmetadata', updateUI);
+    window.addEventListener('resize', () => setView(document.querySelector('.tab.active')?.dataset.viewTarget || 'captions'));
+  </script>
+</body>
+</html>
